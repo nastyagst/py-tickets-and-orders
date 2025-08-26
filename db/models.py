@@ -69,19 +69,23 @@ class Order(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self) -> str:
-        return self.created_at.strftime("%Y-%m-%d %H:%M:%S")
+        return str(self.created_at)
 
 
 class Ticket(models.Model):
-    movie_session = models.ForeignKey("MovieSession", on_delete=models.CASCADE)
-    order = models.ForeignKey("Order", on_delete=models.CASCADE)
+    movie_session = models.ForeignKey(
+        "MovieSession", on_delete=models.CASCADE, related_name="tickets"
+    )
+    order = models.ForeignKey(
+        "Order", on_delete=models.CASCADE, related_name="tickets"
+    )
     row = models.IntegerField()
     seat = models.IntegerField()
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["movie_session", "row", "seat"],
+                fields=["row", "seat", "movie_session"],
                 name="unique_ticket_per_session"
             )
         ]
@@ -98,10 +102,10 @@ class Ticket(models.Model):
         if self.row < 1 or self.row > hall.rows:
             raise ValidationError(
                 {
-                    "row": (
+                    "row": [
                         f"row number must be in available range: "
                         f"(1, rows): (1, {hall.rows})"
-                    )
+                    ]
                 }
             )
 
